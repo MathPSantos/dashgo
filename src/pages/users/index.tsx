@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Link from "next/link";
+import NextLink from "next/link";
 import {
   Box,
   Button,
@@ -7,6 +7,7 @@ import {
   Flex,
   Heading,
   Icon,
+  Link,
   Spinner,
   Table,
   Tbody,
@@ -24,6 +25,8 @@ import { Pagination } from "../../components/Pagination";
 import { Sidebar } from "../../components/Sidebar";
 
 import { useUsers } from "../../services/hooks/useUsers";
+import { queryClient } from "../../services/queryClient";
+import { api } from "../../services/api";
 
 export default function UserList() {
   const [page, setPage] = useState(1);
@@ -33,6 +36,14 @@ export default function UserList() {
     base: false,
     lg: true,
   });
+
+  async function handlePrefetchUser(userId: number) {
+    await queryClient.prefetchQuery(["user", userId], async () => {
+      const { data } = await api.get(`users/${userId}`);
+
+      return data;
+    });
+  }
 
   return (
     <Box>
@@ -50,7 +61,7 @@ export default function UserList() {
               )}
             </Heading>
 
-            <Link href="/users/create" passHref>
+            <NextLink href="/users/create" passHref>
               <Button
                 as="a"
                 size="sm"
@@ -60,7 +71,7 @@ export default function UserList() {
               >
                 Criar novo
               </Button>
-            </Link>
+            </NextLink>
           </Flex>
 
           {isLoading ? (
@@ -92,7 +103,14 @@ export default function UserList() {
                       </Td>
                       <Td>
                         <Box>
-                          <Text fontWeight="bold">{user.name}</Text>
+                          <Link
+                            color="purple.400"
+                            onMouseEnter={() =>
+                              handlePrefetchUser(Number(user.id))
+                            }
+                          >
+                            {user.name}
+                          </Link>
                           <Text fontSize="small" color="gray.300">
                             {user.email}
                           </Text>
